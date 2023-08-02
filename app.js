@@ -10,7 +10,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect(DB_URL, {
   useNewUrlParser: true,
-});
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error(err));
 
 app.use((req, res, next) => {
   req.user = {
@@ -20,6 +22,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
