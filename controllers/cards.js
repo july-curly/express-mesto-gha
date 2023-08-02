@@ -1,4 +1,5 @@
 const Card = require('../models/card');
+const mongoose = require('mongoose');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
@@ -72,10 +73,16 @@ module.exports.dislikeCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndDelete(req.params.cardId)
+  const { cardId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(cardId)) {
+    res.status(400).send({ message: 'Некорректный идентификатор карточки' });
+    return;
+  }
+  Card.findByIdAndDelete(cardId)
     .then((card) => {
       if (!card) {
         res.status(404).send({ message: 'Карточка не найдена' });
+        return;
       }
       res.send(card);
     })
