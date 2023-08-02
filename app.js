@@ -10,7 +10,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect(DB_URL, {
   useNewUrlParser: true,
-  useCreateIndex: true,
+});
+
+app.use((req, res, next) => {
+  req.user = {
+    _id: '64c8ab092c3686868d28d996',
+  };
+  next();
 });
 
 app.use('/users', require('./routes/users'));
