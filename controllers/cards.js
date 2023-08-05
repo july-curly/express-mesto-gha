@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { merge } = require('../routes/users');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
