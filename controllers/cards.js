@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
+const { merge } = require('../routes/users');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
@@ -82,7 +83,7 @@ module.exports.deleteCard = (req, res) => {
   Card.findByIdAndDelete(cardId)
     .orFail()
     .then(() => {
-      res.send('Карточка удалена');
+      res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       if (!mongoose.Types.ObjectId.isValid(cardId)) {
