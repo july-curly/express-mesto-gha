@@ -16,13 +16,14 @@ module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => {
-      Card.findById(card._id)
-        .populate('owner')
-        .then((item) => res.status(201).send(item))
-        .catch(() => res.status(404).send({ message: 'Карточка не найдена' }));
+      card.populate('owner').then(() => {
+        res.status(201).send(card);
+      }).catch(() => {
+        res.status(404).send({ message: 'Карточка не найдена' });
+      });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         res.status(400).send({ message: err.message });
       } else {
         res.status(500).send({ message: 'На сервере произошла ошибка' });
@@ -31,20 +32,22 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
+  const { cardId } = req.params;
   Card.findByIdAndUpdate(
-    req.params.cardId,
+    cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
+    .orFail()
+    .populate(['owner', 'likes'])
     .then((card) => {
-      if (!card) {
-        res.status(404).send({ message: 'Карточка не найдена' });
-      }
       res.send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (!mongoose.Types.ObjectId.isValid(cardId)) {
+        res.status(400).send({ message: 'Некорректный ID карточки' });
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(404).send({ message: 'Карточка не найдена' });
       } else {
         res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
@@ -52,20 +55,22 @@ module.exports.likeCard = (req, res) => {
 };
 
 module.exports.dislikeCard = (req, res) => {
+  const { cardId } = req.params;
   Card.findByIdAndUpdate(
-    req.params.cardId,
+    cardId,
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .orFail()
+    .populate(['owner', 'likes'])
     .then((card) => {
-      if (!card) {
-        res.status(404).send({ message: 'Карточка не найдена' });
-      }
       res.send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (!mongoose.Types.ObjectId.isValid(cardId)) {
+        res.status(400).send({ message: 'Некорректный ID карточки' });
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(404).send({ message: 'Карточка не найдена' });
       } else {
         res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
@@ -74,21 +79,16 @@ module.exports.dislikeCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(cardId)) {
-    res.status(400).send({ message: 'Некорректный идентификатор карточки' });
-    return;
-  }
   Card.findByIdAndDelete(cardId)
-    .then((card) => {
-      if (!card) {
-        res.status(404).send({ message: 'Карточка не найдена' });
-        return;
-      }
-      res.send(card);
+    .orFail()
+    .then(() => {
+      res.send('Карточка удалена');
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (!mongoose.Types.ObjectId.isValid(cardId)) {
+        res.status(400).send({ message: 'Некорректный ID карточки' });
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(404).send({ message: 'Карточка не найдена' });
       } else {
         res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
