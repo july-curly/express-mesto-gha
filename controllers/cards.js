@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { StatusCodes } = require('http-status-codes');
 const Card = require('../models/card');
 
 module.exports.getCards = (req, res) => {
@@ -8,7 +9,7 @@ module.exports.getCards = (req, res) => {
       res.send(cards);
     })
     .catch(() => {
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -17,16 +18,16 @@ module.exports.createCard = (req, res) => {
   Card.create({ name, link, owner: req.user._id })
     .then((card) => {
       card.populate('owner').then(() => {
-        res.status(201).send(card);
+        res.status(StatusCodes.CREATED).send(card);
       }).catch(() => {
-        res.status(404).send({ message: 'Карточка не найдена' });
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Карточка не найдена' });
       });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(400).send({ message: err.message });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: err.message });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -45,11 +46,11 @@ module.exports.likeCard = (req, res) => {
     })
     .catch((err) => {
       if (!mongoose.Types.ObjectId.isValid(cardId)) {
-        res.status(400).send({ message: 'Некорректный ID карточки' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Некорректный ID карточки' });
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Карточка не найдена' });
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Карточка не найдена' });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -68,11 +69,11 @@ module.exports.dislikeCard = (req, res) => {
     })
     .catch((err) => {
       if (!mongoose.Types.ObjectId.isValid(cardId)) {
-        res.status(400).send({ message: 'Некорректный ID карточки' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Некорректный ID карточки' });
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Карточка не найдена' });
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Карточка не найдена' });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -80,19 +81,18 @@ module.exports.dislikeCard = (req, res) => {
 module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(cardId)) {
-    res.status(400).send({ message: 'Некорректный ID карточки' });
-  }
   Card.findByIdAndDelete(cardId)
     .orFail()
     .then(() => {
       res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Карточка не найдена' });
+      if (!mongoose.Types.ObjectId.isValid(cardId)) {
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Некорректный ID карточки' });
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Карточка не найдена' });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
