@@ -79,15 +79,17 @@ module.exports.dislikeCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(cardId)) {
+    res.status(400).send({ message: 'Некорректный ID карточки' });
+  }
   Card.findByIdAndDelete(cardId)
     .orFail()
     .then(() => {
       res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
-      if (!mongoose.Types.ObjectId.isValid(cardId)) {
-        res.status(400).send({ message: 'Некорректный ID карточки' });
-      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(404).send({ message: 'Карточка не найдена' });
       } else {
         res.status(500).send({ message: 'На сервере произошла ошибка' });
