@@ -80,6 +80,13 @@ module.exports.dislikeCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
+  const userId = req.user.id;
+  Card.findById(cardId)
+    .then((card) => {
+      if (card.userId !== userId) {
+        res.status(StatusCodes.UNAUTHORIZED).send({ message: 'У вас нет прав для удаления этой карточки' });
+      }
+    });
 
   Card.findByIdAndDelete(cardId)
     .orFail()

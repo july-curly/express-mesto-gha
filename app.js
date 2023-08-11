@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { login, createUser } = require('./controllers/users');
+const auth = require('./middlewares/auth');
 
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 const app = express();
@@ -14,12 +16,10 @@ mongoose.connect(DB_URL, {
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error(err));
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '64c8ab092c3686868d28d996',
-  };
-  next();
-});
+app.post('/signin', login);
+app.post('/signup', createUser);
+
+app.use(auth);
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
