@@ -7,12 +7,14 @@ const userSchema = new mongoose.Schema({
     // required: [true, 'Заполните это поле.'],
     minlength: [2, 'Текст должен быть не короче 2 симв.'],
     maxlength: [30, 'Текст должен быть не более 30 симв.'],
+    default: ['Жак-Ив Кусто'],
   },
   about: {
     type: String,
     //  required: [true, 'Заполните это поле.'],
     minlength: [2, 'Текст должен быть не короче 2 симв.'],
     maxlength: [30, 'Текст должен быть не более 30 симв.'],
+    default: ['Исследователь'],
   },
   avatar: {
     type: String,
@@ -23,6 +25,7 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Введите URL',
     },
+    default: ['https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png'],
   },
   email: {
     type: String,
