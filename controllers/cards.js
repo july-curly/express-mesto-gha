@@ -1,8 +1,9 @@
-const { HTTP_STATUS_CREATED, HTTP_STATUS_UNAUTHORIZED } = require('http2').constants;
+const { HTTP_STATUS_CREATED } = require('http2').constants;
 const mongoose = require('mongoose');
 const Card = require('../models/card');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -79,27 +80,25 @@ module.exports.dislikeCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  const { cardId } = req.params;
-  const userId = req.user.id;
-  Card.findById(cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
-      if (card.userId !== userId) {
-        res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'У вас нет прав для удаления этой карточки' });
+      if (!card.owner.equals(req.user._id)) {
+        throw new ForbiddenError('У вас нет прав для удаления этой карточки');
       }
-    });
-
-  Card.findByIdAndDelete(cardId)
-    .orFail()
-    .then(() => {
-      res.send({ message: 'Карточка удалена' });
+      Card.deleteOne(card)
+        .orFail()
+        .then(() => {
+          res.send({ message: 'Карточка удалена' });
+        })
+        .catch((err) => {
+          if (err instanceof mongoose.Error.CastError) {
+            next(new BadRequestError('Некорректный ID карточки'));
+          } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+            next(new NotFoundError('Карточка не найдена'));
+          } else {
+            next(err);
+          }
+        });
     })
-    .catch((err) => {
-      if (!mongoose.Types.ObjectId.isValid(cardId)) {
-        next(new BadRequestError('Некорректный ID карточки'));
-      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        next(new NotFoundError('Карточка не найдена'));
-      } else {
-        next(err);
-      }
-    });
+    .catch((err) => next(err));
 };

@@ -6,9 +6,7 @@ const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
-// const UnauthorizedError = require('../errors/UnauthorizedError');
-
-const JWT_SECRET = '111111111';
+const { JWT_SECRET } = require('../utils/constants');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -122,12 +120,8 @@ module.exports.login = (req, res, next) => {
     });
 };
 
-module.exports.getUserInfo = (req, res) => {
-  res.status(200).json({
-    id: req.user._id,
-    email: req.user.email,
-    name: req.user.name,
-    about: req.user.about,
-    avatar: req.user.avatar,
-  });
+module.exports.getUserInfo = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => res.status(HTTP_STATUS_OK).send(user))
+    .catch(next);
 };
