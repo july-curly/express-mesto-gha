@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const UnauthorizedError = require('../errors/UnauthorizedError');
-const ForbiddenError= require('../errors/ForbiddenError');
+const ForbiddenError = require('../errors/ForbiddenError');
+const urlRegexPattern = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -24,7 +25,7 @@ const userSchema = new mongoose.Schema({
     //  required: [true, 'Заполните это поле.'],
     validate: {
       validator(url) {
-        return validator.isURL(url);
+        return urlRegexPattern.test(url);
       },
       message: 'Введите URL',
     },
