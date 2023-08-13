@@ -1,22 +1,24 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { StatusCodes } = require('http-status-codes');
+const { HTTP_STATUS_CREATED, HTTP_STATUS_OK } = require('http2').constants;
 const User = require('../models/user');
+const { BadRequestError } = require('../errors/BadRequestError');
+const { NotFoundError } = require('../errors/NotFoundError');
 
 const JWT_SECRET = '111111111';
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       res.send(users);
     })
-    .catch(() => {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    .catch((err) => {
+      next(err);
     });
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
   User.findById(userId)
     .orFail()
@@ -25,16 +27,16 @@ module.exports.getUserById = (req, res) => {
     })
     .catch((err) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Некорректный ID пользователя' });
+        next(new BadRequestError('Некорректный ID пользователя'));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
+        next(new NotFoundError('Пользователь не найден'));
       } else {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -45,18 +47,18 @@ module.exports.createUser = (req, res) => {
       name, about, avatar, email, password: hashedPassword,
     }))
     .then((user) => {
-      res.status(StatusCodes.CREATED).send(user);
+      res.status(HTTP_STATUS_CREATED).send(user);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: err.message });
+        next(new BadRequestError(err.message));
       } else {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.updateProfile = (req, res) => {
+module.exports.updateProfile = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -69,16 +71,16 @@ module.exports.updateProfile = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: err.message });
+        next(new BadRequestError(err.message));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
+        next(new NotFoundError('Пользователь не найден'));
       } else {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -91,16 +93,16 @@ module.exports.updateAvatar = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: err.message });
+        next(new BadRequestError(err.message));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
+        next(new NotFoundError('Пользователь не найден'));
       } else {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email }).select('+password')
     .then((user) => {
@@ -116,14 +118,14 @@ module.exports.login = (req, res) => {
           const payload = { _id: user._id };
           const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
           res.cookie('token', token, { httpOnly: true, maxAge: 3600000 * 24 * 7 });
-          res.status(StatusCodes.OK).send({ message: 'Успешная аутентификация' });
+          res.status(HTTP_STATUS_OK).send({ message: 'Успешная аутентификация' });
         })
-        .catch(() => {
-          res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка1' });
+        .catch((err) => {
+          next(err);
         });
     })
-    .catch(() => {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    .catch((err) => {
+      next(err);
     });
 };
 
