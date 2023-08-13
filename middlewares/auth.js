@@ -1,22 +1,25 @@
 const jwt = require('jsonwebtoken');
-const { StatusCodes } = require('http-status-codes');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization;
+const JWT_SECRET = '111111111';
 
-  if (!token) {
-    res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Токен отсутствует' });
-    return;
+module.exports = (req, res, next) => {
+  const { authorization } = req.headers;
+
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
-  jwt.verify(token, process.env.JWT_SECRET)
-    .then((decoded) => {
-      req.user = decoded;
-      next();
-    })
-    .catch(() => {
-      res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Неверный токен' });
-    });
-};
+  const token = authorization.replace('Bearer ', '');
+  let payload;
 
-module.exports = authMiddleware;
+  try {
+    payload = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    throw new UnauthorizedError('Необходима авторизация');
+  }
+
+  req.user = payload;
+
+  next();
+};

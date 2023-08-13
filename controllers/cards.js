@@ -1,8 +1,8 @@
 const { HTTP_STATUS_CREATED, HTTP_STATUS_UNAUTHORIZED } = require('http2').constants;
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { BadRequestError } = require('../errors/BadRequestError');
-const { NotFoundError } = require('../errors/NotFoundError');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})

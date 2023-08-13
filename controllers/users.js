@@ -1,10 +1,12 @@
-const { HTTP_STATUS_CREATED, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } = require('http2').constants;
+const { HTTP_STATUS_CREATED, HTTP_STATUS_OK } = require('http2').constants;
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { BadRequestError } = require('../errors/BadRequestError');
-const { NotFoundError } = require('../errors/NotFoundError');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const ConflictError = require('../errors/ConflictError');
+// const UnauthorizedError = require('../errors/UnauthorizedError');
 
 const JWT_SECRET = '111111111';
 
@@ -47,10 +49,14 @@ module.exports.createUser = (req, res, next) => {
       name, about, avatar, email, password: hashedPassword,
     }))
     .then((user) => {
-      res.status(HTTP_STATUS_CREATED).send(user);
+      res.status(HTTP_STATUS_CREATED).send({
+        name: user.name, about: user.about, avatar: user.avatar, _id: user._id, email: user.email,
+      });
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже существует'));
+      } else if (err instanceof mongoose.Error.ValidationError) {
         next(new BadRequestError(err.message));
       } else {
         next(err);
@@ -104,25 +110,12 @@ module.exports.updateAvatar = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  User.findOne({ email }).select('+password')
+  return User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
-      }
-      return bcrypt.compare(password, user.password)
-        .then((isMatch) => {
-          if (!isMatch) {
-            res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
-            return;
-          }
-          const payload = { _id: user._id };
-          const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-          res.cookie('token', token, { httpOnly: true, maxAge: 3600000 * 24 * 7 });
-          res.status(HTTP_STATUS_OK).send({ message: 'Успешная аутентификация' });
-        })
-        .catch((err) => {
-          next(err);
-        });
+      const payload = { _id: user._id };
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+      res.cookie('token', token, { httpOnly: true, maxAge: 3600000 * 24 * 7 });
+      res.status(HTTP_STATUS_OK).send({ message: `${token} Успешная аутентификация ` });
     })
     .catch((err) => {
       next(err);
