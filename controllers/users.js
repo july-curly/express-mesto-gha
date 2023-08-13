@@ -111,9 +111,8 @@ module.exports.login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const payload = { _id: user._id };
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('token', token, { httpOnly: true, maxAge: 3600000 * 24 * 7 });
-      res.status(HTTP_STATUS_OK).send({ message: `${token} Успешная аутентификация ` });
+      jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+      res.status(HTTP_STATUS_OK).send({ message: 'Успешная аутентификация' });
     })
     .catch((err) => {
       next(err);
