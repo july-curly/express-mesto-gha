@@ -5,6 +5,6 @@ class UnauthorizedError extends Error {
     super(message);
     this.statusCode = HTTP_STATUS_UNAUTHORIZED;
   }
-};
+}
 
 module.exports = UnauthorizedError;

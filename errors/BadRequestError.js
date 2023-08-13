@@ -5,6 +5,6 @@ class BadRequestError extends Error {
     super(message);
     this.statusCode = HTTP_STATUS_BAD_REQUEST;
   }
-};
+}
 
 module.exports = BadRequestError;

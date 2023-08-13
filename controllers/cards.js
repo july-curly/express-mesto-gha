@@ -1,9 +1,8 @@
+const { HTTP_STATUS_CREATED, HTTP_STATUS_UNAUTHORIZED } = require('http2').constants;
 const mongoose = require('mongoose');
-const { StatusCodes } = require('http-status-codes');
 const Card = require('../models/card');
 const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
-const { HTTP_STATUS_CREATED, HTTP_STATUS_OK } = require('http2').constants;
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -85,7 +84,7 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(cardId)
     .then((card) => {
       if (card.userId !== userId) {
-        res.status(StatusCodes.UNAUTHORIZED).send({ message: 'У вас нет прав для удаления этой карточки' });
+        res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'У вас нет прав для удаления этой карточки' });
       }
     });
 

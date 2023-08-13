@@ -1,7 +1,7 @@
+const { HTTP_STATUS_CREATED, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } = require('http2').constants;
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { HTTP_STATUS_CREATED, HTTP_STATUS_OK } = require('http2').constants;
 const User = require('../models/user');
 const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
@@ -107,12 +107,12 @@ module.exports.login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return res.status(StatusCodes.UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
+        return res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
       }
       return bcrypt.compare(password, user.password)
         .then((isMatch) => {
           if (!isMatch) {
-            res.status(StatusCodes.UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
+            res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'Неправильные почта или пароль' });
             return;
           }
           const payload = { _id: user._id };
