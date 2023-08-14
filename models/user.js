@@ -8,28 +8,25 @@ const { urlRegexPattern } = require('../utils/constants');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    // required: [true, 'Заполните это поле.'],
+    default: 'Жак-Ив Кусто',
     minlength: [2, 'Текст должен быть не короче 2 симв.'],
     maxlength: [30, 'Текст должен быть не более 30 симв.'],
-    default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
-    //  required: [true, 'Заполните это поле.'],
+    default: 'Исследователь',
     minlength: [2, 'Текст должен быть не короче 2 симв.'],
     maxlength: [30, 'Текст должен быть не более 30 симв.'],
-    default: 'Исследователь',
   },
   avatar: {
     type: String,
-    //  required: [true, 'Заполните это поле.'],
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator(url) {
         return urlRegexPattern.test(url);
       },
       message: 'Введите URL',
     },
-    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
   },
   email: {
     type: String,
