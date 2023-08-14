@@ -3,7 +3,7 @@ const { celebrate, Joi } = require('celebrate');
 const {
   getCards, createCard, deleteCard, likeCard, dislikeCard,
 } = require('../controllers/cards');
-const { urlRegexPattern } = require('../utils/constants');
+const urlRegexPattern = require('../utils/constants');
 
 const router = express.Router();
 

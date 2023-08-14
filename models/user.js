@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const UnauthorizedError = require('../errors/UnauthorizedError');
-// const ForbiddenError = require('../errors/ForbiddenError');
-const { urlRegexPattern } = require('../utils/constants');
+const ForbiddenError = require('../errors/ForbiddenError');
+const urlRegexPattern = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -50,7 +50,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new UnauthorizedError('Пользователь уже существует');
+        throw new ForbiddenError('Пользователь уже существует');
       }
 
       return bcrypt.compare(password, user.password)

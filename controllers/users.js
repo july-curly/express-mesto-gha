@@ -6,7 +6,6 @@ const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
-const { JWT_SECRET } = require('../utils/constants');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -69,7 +68,7 @@ module.exports.updateProfile = (req, res, next) => {
   )
     .orFail()
     .then((updatedUser) => {
-      res.send(updatedUser);
+      res.status(HTTP_STATUS_OK).send(updatedUser);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -91,7 +90,7 @@ module.exports.updateAvatar = (req, res, next) => {
   )
     .orFail()
     .then((updatedUser) => {
-      res.send(updatedUser);
+      res.status(HTTP_STATUS_OK).send(updatedUser);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -109,7 +108,7 @@ module.exports.login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const payload = { _id: user._id };
-      jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+      jwt.sign(payload, 'SECRET', { expiresIn: '7d' });
       res.status(HTTP_STATUS_OK).send({ message: 'Успешная аутентификация' });
     })
     .catch((err) => {
@@ -119,6 +118,10 @@ module.exports.login = (req, res, next) => {
 
 module.exports.getUserInfo = (req, res, next) => {
   User.findById(req.user._id)
-    .then((user) => res.status(HTTP_STATUS_OK).send(user))
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь не найден');
+      }
+      res.status(HTTP_STATUS_OK).send(user)})
     .catch(next);
 };

@@ -3,12 +3,12 @@ const { celebrate, Joi } = require('celebrate');
 const {
   getUsers, getUserById, updateProfile, updateAvatar, getUserInfo,
 } = require('../controllers/users');
-const { urlRegexPattern } = require('../utils/constants');
+const urlRegexPattern = require('../utils/constants');
 
 const router = express.Router();
 
-router.get('/', getUsers);
 router.get('/me', getUserInfo);
+router.get('/', getUsers);
 
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
