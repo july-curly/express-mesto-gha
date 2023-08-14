@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Card = require('../models/card');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
-const ForbiddenError = require('../errors/ForbiddenError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -83,7 +83,7 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
       if (!card.owner.equals(req.user._id)) {
-        throw new ForbiddenError('У вас нет прав для удаления этой карточки');
+        throw new UnauthorizedError('У вас нет прав для удаления этой карточки');
       }
       Card.deleteOne(card)
         .orFail()

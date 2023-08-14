@@ -1,4 +1,4 @@
-const { HTTP_STATUS_FORBIDDEN } = require('http2').constants;
+const HTTP_STATUS_FORBIDDEN = 403;
 
 class ForbiddenError extends Error {
   constructor(message) {

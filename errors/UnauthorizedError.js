@@ -1,4 +1,4 @@
-const { HTTP_STATUS_UNAUTHORIZED } = require('http2').constants;
+const { HTTP_STATUS_UNAUTHORIZED } = 401;
 
 class UnauthorizedError extends Error {
   constructor(message) {
