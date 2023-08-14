@@ -7,7 +7,7 @@ const NotFoundError = require('../errors/NotFoundError');
 const auth = require('../middlewares/auth');
 const { login } = require('../controllers/users');
 const { createUser } = require('../controllers/users');
-const urlRegexPattern = require('../utils/constants');
+const { urlRegexPattern } = require('../utils/constants');
 
 router.post('/signup', celebrate({
   body: Joi.object().keys({
