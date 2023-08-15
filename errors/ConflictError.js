@@ -1,5 +1,4 @@
-// const { HTTP_STATUS_FORBIDDEN } = require('http2').constants;
-const HTTP_STATUS_CONFLICT = 409;
+const { HTTP_STATUS_CONFLICT } = require('http2').constants;
 
 class ConflictError extends Error {
   constructor(message) {

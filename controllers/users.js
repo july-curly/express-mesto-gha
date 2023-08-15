@@ -35,7 +35,7 @@ module.exports.getUserById = (req, res, next) => {
 
 module.exports.createUser = (req, res, next) => {
   const {
-    name = 'Жак-Ив Кусто', about = 'Исследователь', avatar = 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png', email, password,
+    name, about, avatar, email, password,
   } = req.body;
 
   bcrypt
@@ -108,8 +108,8 @@ module.exports.login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const payload = { _id: user._id };
-      jwt.sign(payload, 'SECRET', { expiresIn: '7d' });
-      res.status(HTTP_STATUS_OK).send({ message: 'Успешная аутентификация' });
+      const token = jwt.sign(payload, 'SECRET', { expiresIn: '7d' });
+      res.status(HTTP_STATUS_OK).send({ message: `Успешная аутентификация! Токен ${token}` });
     })
     .catch((err) => {
       next(err);
