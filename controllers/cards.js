@@ -1,4 +1,4 @@
-const { HTTP_STATUS_CREATED } = require('http2').constants;
+const { HTTP_STATUS_CREATED, HTTP_STATUS_OK } = require('http2').constants;
 const mongoose = require('mongoose');
 const Card = require('../models/card');
 const BadRequestError = require('../errors/BadRequestError');
@@ -88,7 +88,7 @@ module.exports.deleteCard = (req, res, next) => {
       Card.deleteOne(card)
         .orFail()
         .then(() => {
-          res.send({ message: 'Карточка удалена' });
+          res.status(HTTP_STATUS_OK).send({ message: 'Карточка удалена' });
         })
         .catch((err) => {
           if (err instanceof mongoose.Error.DocumentNotFoundError) {
@@ -103,6 +103,8 @@ module.exports.deleteCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'TypeError') {
         next(new NotFoundError('Карточка не найдена'));
+      } else {
+        next(err);
       }
     });
 };
